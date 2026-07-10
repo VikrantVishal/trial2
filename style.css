@@ -269,6 +269,7 @@ input,
 select,
 textarea {
   width: 100%;
+  max-width: 100%;
   background: var(--coal-900);
   border: 1px solid var(--line);
   border-radius: 7px;
@@ -296,6 +297,11 @@ textarea {
   gap: 12px;
   margin-bottom: 12px;
 }
+
+.field-row > div {
+  min-width: 0;
+}
+
 @media (min-width: 560px) {
   .field-row.two {
     grid-template-columns: 1fr 1fr;
