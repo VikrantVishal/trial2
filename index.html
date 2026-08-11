@@ -37,7 +37,7 @@
     flex-direction: column;
   }
 
-  /* ─── HEADER (identical to source) ─── */
+  /* ─── HEADER ─── */
   .header {
     background: linear-gradient(135deg, #0a0e18 0%, #151d2e 60%, #1a0505 100%);
     border-bottom: 2px solid var(--amber);
@@ -186,7 +186,6 @@
     min-height: 180px;
   }
 
-  /* Subtle animated top bar */
   .nav-card::before {
     content: '';
     position: absolute;
@@ -197,7 +196,6 @@
     opacity: 0.6;
   }
 
-  /* Glow overlay on hover */
   .nav-card::after {
     content: '';
     position: absolute;
@@ -335,6 +333,67 @@
     border-top: 1px solid var(--border);
     opacity: 0.7;
   }
+
+  /* ─── INDEPENDENCE DAY POPUP STYLES ─── */
+  .id-popup-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 9999;
+    display: none; /* Hidden by default */
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+  }
+  .id-popup-container {
+    position: relative;
+    /* Festive Tri-color Gradient Border */
+    background: linear-gradient(135deg, #FF9933 0%, #FFFFFF 50%, #138808 100%);
+    padding: 6px; /* Acts as the border thickness */
+    border-radius: 16px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.8), 0 0 25px rgba(255, 153, 51, 0.3);
+    max-width: 90vw;
+    max-height: 90vh;
+    display: flex;
+    animation: popupFadeIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  }
+  .id-popup-image {
+    max-width: 100%;
+    max-height: calc(90vh - 12px); /* Account for container padding */
+    object-fit: contain;
+    border-radius: 10px;
+    display: block;
+  }
+  .id-popup-close {
+    position: absolute;
+    top: -14px;
+    right: -14px;
+    width: 36px;
+    height: 36px;
+    background: var(--ore);
+    color: var(--bright);
+    border: 2px solid #fff;
+    border-radius: 50%;
+    font-size: 22px;
+    line-height: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    transition: transform 0.2s ease, background 0.2s ease;
+    z-index: 2;
+  }
+  .id-popup-close:hover {
+    transform: scale(1.1);
+    background: #ff3333;
+  }
+  @keyframes popupFadeIn {
+    0% { opacity: 0; transform: scale(0.9); }
+    100% { opacity: 1; transform: scale(1); }
+  }
 </style>
 </head>
 <body>
@@ -409,6 +468,14 @@
   🌼 Big Innovations Begin with Small Improvements. 🌼
 </footer>
 
+<!-- ─── INDEPENDENCE DAY POPUP ─── -->
+<div id="idPopup" class="id-popup-overlay">
+  <div class="id-popup-container">
+    <button id="idPopupClose" class="id-popup-close" aria-label="Close popup">&times;</button>
+    <img src="IMG_3430.PNG" alt="Happy Independence Day" class="id-popup-image">
+  </div>
+</div>
+
 <script>
   function updateClock() {
     const now = new Date();
@@ -426,6 +493,38 @@
   }
   updateClock();
   setInterval(updateClock, 1000);
+
+  // ─── INDEPENDENCE DAY POPUP LOGIC ───
+  function checkAndShowIndependenceDayPopup() {
+    const today = new Date();
+    
+    // Check if the current date is exactly August 15, 2026.
+    // Note: JavaScript months are 0-indexed (0 = Jan, 7 = Aug)
+    const isAug15_2026 = (today.getFullYear() === 2026 && today.getMonth() === 7 && today.getDate() === 11);
+
+    if (isAug15_2026) {
+      const popupOverlay = document.getElementById('idPopup');
+      const closeBtn = document.getElementById('idPopupClose');
+
+      // Display the popup
+      popupOverlay.style.display = 'flex';
+
+      // Close logic via button
+      closeBtn.addEventListener('click', () => {
+        popupOverlay.style.display = 'none';
+      });
+
+      // Close logic via clicking outside the container overlay
+      popupOverlay.addEventListener('click', (event) => {
+        if (event.target === popupOverlay) {
+          popupOverlay.style.display = 'none';
+        }
+      });
+    }
+  }
+  
+  // Run the check when the page loads
+  document.addEventListener('DOMContentLoaded', checkAndShowIndependenceDayPopup);
 </script>
 </body>
 </html>
