@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="hi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="color-scheme" content="light only" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>SOP – Digital SOP Library</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <main id="app"></main>
+    <script src="js/departments.js"></script>
+    <script src="js/sops.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/tts.js"></script>
+    <script>
+      const params = new URLSearchParams(location.search);
+      const deptKey = DEPTS[params.get("dept")] ? params.get("dept") : "mining";
+      const eqId = params.get("eq");
+      const eq = DEPTS[deptKey].equipment.find((x) => x.id === eqId);
+      const backHref = DEPTS[deptKey].page;
+      let lang = "hi"; /* Hindi is the default language */
+      try { lang = sessionStorage.getItem("sopLang") || "hi"; } catch (e) {}
+
+      let lastSec = -1, clickedSec = -1;
+      function updateStickyH() {
+        const sh = document.querySelector(".sop-sticky-header");
+        if (sh) document.documentElement.style.setProperty("--sticky-h", sh.offsetHeight + 8 + "px");
+      }
+      function goSec(i) {
+        const el = document.getElementById("sec-" + i);
+        if (!el) return;
+        clickedSec = i;
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+      function highlightSec() {
+        const tabs = document.getElementById("secTabs");
+        if (!tabs) return;
+        const heads = [...document.querySelectorAll(".sop h3")];
+        const line = document.querySelector(".sop-sticky-header").getBoundingClientRect().bottom + 12;
+        let cur = 0;
+        heads.forEach((hd, i) => { if (hd.getBoundingClientRect().top <= line) cur = i; });
+        const atBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2;
+        if (atBottom && clickedSec > cur) cur = clickedSec;
+        else if (!atBottom && cur === clickedSec) clickedSec = -1;
+        [...tabs.children].forEach((b, i) => b.classList.toggle("on", i === cur));
+        if (cur !== lastSec) {
+          lastSec = cur;
+          const b = tabs.children[cur];
+          if (b) tabs.scrollTo({ left: b.offsetLeft - (tabs.clientWidth - b.offsetWidth) / 2, behavior: "smooth" });
+        }
+      }
+      window.addEventListener("scroll", highlightSec, { passive: true });
+      window.addEventListener("resize", () => { updateStickyH(); highlightSec(); });
+
+      function renderSopList(items, type = "ul") {
+        const tag = type === "ol" ? "ol" : "ul";
+        return `<${tag}>${items.map((item) => {
+          if (Array.isArray(item)) {
+            const [text, children] = item;
+            return `<li>${esc(text)}${Array.isArray(children) ? renderSopList(children) : ""}</li>`;
+          }
+          return `<li>${esc(item)}</li>`;
+        }).join("")}</${tag}>`;
+      }
+
+      function renderSopBody(row, index, numbered) {
+        const prefix = numbered === false ? "" : index + 1 + ". ";
+        const content = Array.isArray(row[1])
+          ? renderSopList(row[1], row[2])
+          : `<p>${esc(row[1])}</p>`;
+        const btn = window.TTS && TTS.supported
+          ? `<button type="button" class="tts-btn" data-sec="${index}" data-title="${esc(row[0])}">🔊</button>`
+          : "";
+        return `<h3 id="sec-${index}"><span class="h-txt">${prefix}${esc(row[0])}</span>${btn}</h3>${content}`;
+      }
+
+      function showSop(l) {
+        if (window.TTS) TTS.stop(true); /* language change / re-render stops any reading */
+        if (l) {
+          lang = l;
+          try { sessionStorage.setItem("sopLang", l); } catch (e) {}
+        }
+        const app = document.getElementById("app");
+        const s = SOPS[eqId];
+        if (!eq) {
+          app.innerHTML = navBar(backHref) + `<div class="note">Equipment not found.<br>उपकरण नहीं मिला।</div>`;
+          return;
+        }
+        document.title = `${eq.en} SOP – Digital SOP Library`;
+        if (!s) {
+          app.innerHTML =
+            navBar(backHref) +
+            `<h2>${deptKey === "elec" ? `${eq.en}<br>${eq.hi}` : `${eq.en} / ${eq.hi}`}</h2><div class="note">SOP for this equipment will be added soon.<br>इस उपकरण का SOP शीघ्र जोड़ा जाएगा।</div>`;
+          return;
+        }
+        app.innerHTML =
+          navBar(backHref) +
+          `<div class="sop-sticky-header">
+            <h2>${s.title.en}<br>${s.title.hi}</h2>
+            <div class="lang">
+              <button class="${lang == "hi" ? "on" : ""}" onclick="showSop(\x27hi\x27)">हिंदी</button>
+              <button class="${lang == "en" ? "on" : ""}" onclick="showSop(\x27en\x27)">English</button>
+            </div>
+            ${s.sectionNav ? `<div class="sec-tabs" id="secTabs">${s[lang].map((r, i) => `<button type="button" onclick="goSec(${i})">${s.numbered === false ? "" : i + 1 + ". "}${esc(r[0])}</button>`).join("")}</div>` : ""}
+          </div>
+          <div class="sop">
+            ${s[lang].map((r, i) => renderSopBody(r, i, s.numbered)).join("")}
+          </div>`;
+        lastSec = -1;
+        clickedSec = -1;
+        updateStickyH();
+        scrollTo(0, 0);
+        highlightSec();
+        if (window.TTS) TTS.render();
+      }
+      showSop();
+      /* Quiz "Read SOP section" links open here as sop.html?dept=..&eq=..&sec=N (0-based section) */
+      const secParam = parseInt(params.get("sec"), 10);
+      if (!isNaN(secParam)) setTimeout(() => goSec(secParam), 300);
+    </script>
+  </body>
+</html>
