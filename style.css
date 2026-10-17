@@ -479,7 +479,7 @@ footer {
   font: inherit;
   color: var(--tx);
   background: var(--card);
-  border: 2px solid var(--bd);
+  border: 1px solid var(--bd);
   border-left: 5px solid var(--blue2);
   border-radius: 8px;
   cursor: pointer;
