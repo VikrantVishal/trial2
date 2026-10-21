@@ -1,0 +1,37 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isAdmin() { return request.auth != null && exists(/databases/$(database)/documents/quizAdmins/$(request.auth.uid)); }
+    function firstSetup() { return request.auth != null && !exists(/databases/$(database)/documents/quizMeta/bootstrap); }
+
+    match /quizMeta/bootstrap { allow get: if true; allow create: if firstSetup(); }
+    match /quizAdmins/{uid} {
+      allow get: if request.auth != null && (request.auth.uid == uid || isAdmin());
+      allow list: if isAdmin();
+      allow create: if (request.auth.uid == uid && firstSetup()) || isAdmin();
+      allow update, delete: if isAdmin();
+    }
+    match /adminLogins/{u} { allow get: if true; allow create: if firstSetup() || isAdmin(); allow update, delete: if isAdmin(); }
+
+    match /employees/{id} { allow get: if true; allow list, write: if isAdmin(); }
+    match /questions/{id} { allow read: if true; allow write: if isAdmin(); }
+    // The questions of each attempt exactly as assigned (written once when the attempt starts, never changed)
+    match /quizAttemptSnapshots/{id} {
+      allow get: if true;
+      allow list: if isAdmin();
+      allow create: if request.resource.data.keys().hasOnly(['sapId', 'questions', 'createdAt']);
+      allow update, delete: if false;
+    }
+    match /quizBanks/{id} { allow read: if true; allow write: if isAdmin(); }
+
+    // Quiz attempts are created/graded in the employee's browser (Spark plan, no Cloud Functions).
+    match /quizAttempts/{id} {
+      allow read: if true;
+      allow create: if request.resource.data.status == "in_progress";
+      allow update: if isAdmin() || (resource.data.status == "in_progress"
+        && request.resource.data.sapId == resource.data.sapId
+        && request.resource.data.questionIds == resource.data.questionIds);
+      allow delete: if false;
+    }
+  }
+}
