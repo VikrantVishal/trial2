@@ -1,4 +1,4 @@
-import { api, DEMO, QUIZ, quizzesFor } from "./quiz-firebase.js";
+import { api, DEMO, QUIZ, quizzesFor } from "./quiz-firebase.js?v=5";
 
 const $app = document.getElementById("app");
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
