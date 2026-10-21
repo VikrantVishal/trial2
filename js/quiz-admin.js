@@ -1,4 +1,4 @@
-import { FIREBASE_CONFIG, DEMO, loadFirebase } from "./quiz-firebase.js";
+import { FIREBASE_CONFIG, DEMO, loadFirebase } from "./quiz-firebase.js?v=5";
 import { parseJS, checkQ } from "./quiz-parse.js";
 const root = document.getElementById("root");
 const esc = (s) =>
