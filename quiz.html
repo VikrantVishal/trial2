@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="hi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="color-scheme" content="light only" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Quiz – Digital SOP Library</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@400;500;600;700&family=Saira+Extra+Condensed:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="quiz.css" />
+    <link rel="preconnect" href="https://www.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin />
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js" />
+    <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js" />
+    <link rel="modulepreload" href="js/quiz-firebase.js" />
+    <style>
+      /* Apply Saira Condensed only to body content and quiz modals */
+      #app,
+      #app button,
+      #app input,
+      #app select,
+      #app textarea,
+      .qz-ov,
+      .qz-ov button,
+      .qz-ov input,
+      .qz-ov select,
+      .qz-ov textarea {
+        font-family: "Saira Condensed", "Mukta", "Noto Sans Devanagari", Arial, sans-serif;
+      }
+
+      /* Scale down font sizes slightly across quiz elements */
+      #app {
+        font-size: 0.95rem;
+      }
+      #app .qz-q {
+        font-size: 1.12rem;
+      }
+      #app .qz-opt {
+        font-size: 1.02rem;
+      }
+      #app .qz-btn {
+        font-size: 1rem;
+      }
+      #app .qz input[type="text"],
+      #app .qz select {
+        font-size: 1rem;
+      }
+      #app .qz label.f {
+        font-size: 0.95rem;
+      }
+      #app .qz-qc .top {
+        font-size: 1.05rem;
+      }
+      #app .qz-hero h2 {
+        font-size: 1.6rem;
+      }
+      #app .qz-score {
+        font-size: 1.9rem;
+      }
+      #app .qz-stats b {
+        font-size: 1.4rem;
+      }
+
+      /* Preserve original font and size for the Hindi/English language toggle bar */
+      #app .qz-langbar,
+      #app .qz-langbar .lang,
+      #app .qz-langbar .lang button {
+        font-family: var(--font) !important;
+        font-size: 0.8rem;
+      }
+
+      /* Saira Extra Condensed: ONLY Reattempt, View Results, Enter Quiz (tile + popup) and Go Back (font-family + slightly smaller size) */
+      #app .qz-qc > button.block[data-start]:not(.ok),
+      #app .qz-qc button.ghost[data-start],
+      #app .qz-qc button[data-view],
+      #app button[data-act="closeModal"],
+      #app #bStart,
+      .qz-ov button[data-act="closeModal"],
+      .qz-ov #bStart {
+        font-family: "Saira Extra Condensed", "Mukta", "Noto Sans Devanagari", Arial, sans-serif;
+        font-size: 0.9rem;
+      }
+
+      /* Result card (passed): username line + celebration effect */
+      .qz-uname { margin: 2px 0 6px; font-size: 1.3rem; font-weight: 500; letter-spacing: 1px; text-transform: uppercase; color: var(--blue1); }
+      .qz-hero.pass { position: relative; overflow: hidden; padding-bottom: 32px; border-color: #f5b800; background: linear-gradient(135deg, #fffbe6, #e8f7ec 55%, #fff7d6); box-shadow: 0 0 0 2px rgba(245, 184, 0, .35), 0 8px 24px rgba(245, 184, 0, .3); animation: heroPop .6s cubic-bezier(.2, 1.4, .4, 1) both, heroGlow 2.4s ease-in-out .6s infinite; }
+      .qz-hero.pass > * { position: relative; z-index: 1; }
+      .qz-hero.pass::before { content: ""; position: absolute; inset: 0; z-index: 2; pointer-events: none; background: linear-gradient(110deg, transparent 35%, rgba(255, 255, 255, .75) 50%, transparent 65%); transform: translateX(-120%); animation: heroShine 3.2s ease-in-out .8s infinite; }
+      .qz-hero.pass::after { content: "🎉  ✨  🎊  ⭐  🎉  ✨  🎊"; position: absolute; left: 0; right: 0; bottom: 6px; z-index: 1; text-align: center; font-size: 1rem; white-space: nowrap; overflow: hidden; pointer-events: none; animation: heroFloat 2.6s ease-in-out infinite; }
+      .qz-hero.pass .em { animation: heroTrophy 1.6s ease-in-out infinite; }
+      .qz-hero.pass h2 { background: linear-gradient(90deg, #15803d, #d97706, #15803d); background-size: 200% 100%; -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; animation: heroText 3s linear infinite; }
+      @keyframes heroPop { from { opacity: 0; transform: scale(.85); } to { opacity: 1; transform: scale(1); } }
+      @keyframes heroGlow { 0%, 100% { box-shadow: 0 0 0 2px rgba(245, 184, 0, .35), 0 8px 24px rgba(245, 184, 0, .25); } 50% { box-shadow: 0 0 0 4px rgba(245, 184, 0, .55), 0 10px 32px rgba(245, 184, 0, .5); } }
+      @keyframes heroShine { 0% { transform: translateX(-120%); } 60%, 100% { transform: translateX(120%); } }
+      @keyframes heroFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+      @keyframes heroTrophy { 0%, 100% { transform: translateY(0) rotate(-4deg); } 50% { transform: translateY(-6px) rotate(4deg); } }
+      @keyframes heroText { to { background-position: -200% 0; } }
+      @media (prefers-reduced-motion: reduce) { .qz-hero.pass, .qz-hero.pass::before, .qz-hero.pass::after, .qz-hero.pass .em, .qz-hero.pass h2 { animation: none; } }
+    </style>
+  </head>
+  <body>
+    <main id="app"></main>
+    <script src="js/departments.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/quiz-sample.js"></script>
+    <script type="module" src="js/quiz.js"></script>
+  </body>
+</html>
